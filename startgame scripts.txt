@@ -1,0 +1,36 @@
+function startGame() {
+    document.getElementById('start-screen').style.display = 'none';
+    gameStarted = true;
+    gameStartTime = Date.now();
+    timerInterval = setInterval(updateTimer, 1000);
+    
+    // Set initial level to 80
+    currentLevel = 80;
+    
+    // Calculate appropriate logo size for level 80
+    logoSize = initialLogoSize - ((initialLogoSize - finalLogoSize) * (currentLevel - 1) / 99);
+    
+    // Set appropriate health for level 80
+    maxHealth = 100 + (80 - 1) * 10; // Since each level adds 10 health
+    health = maxHealth;
+    
+    // Update UI
+    document.getElementById('current-level').innerText = currentLevel;
+    document.getElementById('minted-count').innerText = `0/${currentLevel * 10}`;
+    
+    updateHealthBar();
+    update();
+}
+
+
+
+
+function startGame() {
+    document.getElementById('start-screen').style.display = 'none';
+    gameStarted = true;
+    gameStartTime = Date.now();
+    timerInterval = setInterval(updateTimer, 1000);
+    health = 100;
+    updateHealthBar();
+    update();
+}
