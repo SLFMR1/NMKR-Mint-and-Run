@@ -62,6 +62,15 @@
             font-weight: bold;
             display: none;
         }
+        #title {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000;
+            font-size: 90px;
+            font-weight: bold;
+        }
         #restart-button {
             position: absolute;
             top: 60%;
@@ -77,7 +86,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #000;
+            color: #c8e301;
             font-size: 48px;
             font-weight: bold;
             display: none;
@@ -123,6 +132,8 @@
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
+    <div id="title">Mint and Run
+    </div>
     <div id="stats">
         Minted NFTs: <span id="minted-count">0</span><br>
         Current Level: <span id="current-level">1</span><br>
@@ -135,6 +146,8 @@
             - Rotate to eat Zombies: W/A/S/D<br>
             - Move: Arrow Keys<br>
             - Bomb: Hit Spacebar fast<br>
+            <br>
+            WARNING: This game may damage your brain!<br>
         </small>
     </div>
 
@@ -671,6 +684,7 @@ function updateHealthBar() {
 function startGame() {
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('controls-manual').style.display = 'none';
+    document.getElementById('title').style.display = 'none';
     gameStarted = true;
     gameStartTime = Date.now();
     timerInterval = setInterval(updateTimer, 1000);
