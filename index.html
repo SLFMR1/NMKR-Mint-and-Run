@@ -145,10 +145,15 @@
             Controls:<br>
             - Rotate to eat Zombies: W/A/S/D<br>
             - Move: Arrow Keys<br>
-            - Bomb: Hit Spacebar fast<br>
+            - Bomb Zombie Crowds: Hit Spacebar fast<br>
             <br>
-            WARNING: This game may damage your brain!<br>
-        </small>
+            WARNING: This game may damage your brain, eyes, and mental health,<br>
+            potentially cause seizures, and may trigger epilepsy!<br>
+            <br>
+            But it is a lot of fun!<br>
+            To win this game, you need to survive Level 100.<br>
+            It's getting harder over time.<br>
+            Good luck!        </small>
     </div>
 
     <div id="health-bar">
@@ -371,7 +376,7 @@ function drawTokens() {
 }
 
 function updateNfts() {
-    const zombieSpeedMultiplier = 1 + (currentLevel * 0.1); 
+    const zombieSpeedMultiplier = 1 + (currentLevel * 0.15); 
     
     nfts.forEach(nft => {
         if (!nft.isZombie) {
