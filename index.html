@@ -118,6 +118,31 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             text-align: center;
         }
+        #start-screen:hover {
+    animation: wiggle 0.5s infinite;
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96e6a1);
+    background-size: 400% 400%;
+    animation: wiggle 0.5s infinite, gradient 3s ease infinite;
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    letter-spacing: 2px;
+    border-width: 3px;
+    border-style: dashed;
+}
+
+@keyframes wiggle {
+    0% { transform: translate(-50%, -50%) scale(1.1) rotate(0deg); }
+    25% { transform: translate(-50%, -50%) scale(1.1) rotate(-3deg); }
+    75% { transform: translate(-50%, -50%) scale(1.1) rotate(3deg); }
+    100% { transform: translate(-50%, -50%) scale(1.1) rotate(0deg); }
+}
+
+@keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
         @keyframes level-up-animation {
             0% { transform: translate(-50%, -50%) scale(1); }
             50% { transform: translate(-50%, -50%) scale(1.5); }
@@ -127,6 +152,16 @@
             0% { opacity: 1; transform: scale(1); }
             100% { opacity: 0; transform: scale(3); }
         }
+
+        @keyframes obstacleHit {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.obstacle-hit {
+    animation: obstacleHit 0.2s ease;
+}
     </style>
 </head>
 <body>
@@ -145,6 +180,8 @@
             - Move: Arrow Keys<br>
             - Bomb Zombie Crowds: Hit Spacebar fast<br>
             - Pause: Hit P key<br>
+            <br>
+            Game will autosave your progress.<br>
             <br>
             WARNING: This game may damage your brain, eyes, and mental health,<br>
             potentially cause seizures, and may trigger epilepsy!<br>
@@ -181,6 +218,7 @@
         const levelUpSound = new Audio();
         const explosionSound = new Audio();
         const speedBoostSound = new Audio();
+        const obstacleSound = new Audio();
         const mediaFiles = [
             {type: 'image', src: 'https://c-ipfs-gw.nmkr.io/ipfs/QmZZAnMpcuSbeYwxVqqX9R2eHiuJdWUwQgve8j1wpMz9kT', element: logo},
             {type: 'image', src: 'https://c-ipfs-gw.nmkr.io/ipfs/Qma4tci1QshQwDLohWrvtJpan12aB2VLedkuaQDhY2U2K8', element: nftImage},
@@ -194,7 +232,8 @@
             {type: 'audio', src: 'https://c-ipfs-gw.nmkr.io/ipfs/QmQEA4yVojLP3YKFRafNeKj5JqHmf4Wxw6ot1w1jjA3GZ9', element: explosionSound},
             {type: 'audio', src: 'https://c-ipfs-gw.nmkr.io/ipfs/QmdxYpMGwvXtqQGm7xuFeUqyyWu2JAZ2PzuWyJiMGnoPZP', element: speedBoostSound},
             {type: 'image', src: 'https://c-ipfs-gw.nmkr.io/ipfs/QmYpi74K7VLdGNBgKpD5Pjinbg8pxKCFPd4FHYVMuRpvvt', element: obstacleImage},
-            {type: 'audio', src: 'https://c-ipfs-gw.nmkr.io/ipfs/QmdbuGW4LKTujCnnAJ1mhFtvv5kf4BU14FwBQdFRNyCUX5', element: zombieEatenSound}
+            {type: 'audio', src: 'https://c-ipfs-gw.nmkr.io/ipfs/QmdbuGW4LKTujCnnAJ1mhFtvv5kf4BU14FwBQdFRNyCUX5', element: zombieEatenSound},
+            {type: 'audio', src: 'https://c-ipfs-gw.nmkr.io/ipfs/QmeK5BjEb2AgDWqELBswFVSyHNdKfV9eXhbZiwkdvstky2', element: obstacleSound}
         ];
         const initialLogoSize = 200;
         const finalLogoSize = 20;
@@ -203,7 +242,7 @@
         const nftSpeed = 2;
         const nftBlinkTime = 5000;
         const tokenSize = 60;
-        const tokenSpeedDuration = 10000;
+        const tokenSpeedDuration = 7000;
         const killThreshold = 5;
         const killTimeout = 2000;
         const attackTimeout = 1000;
@@ -319,27 +358,45 @@
             return tokenArray;
         }
         function generateObstacles() {
-            const obstacleArray = [];
-            const obstacleSize = 80;
-            for (let i = 0; i < 3; i++) {
-                obstacleArray.push({
-                    x: Math.random() * (canvas.width - obstacleSize),
-                    y: Math.random() * (canvas.height - obstacleSize),
-                    width: obstacleSize,
-                    height: obstacleSize,
-                    spawnTime: Date.now()
-                });
-            }
-            return obstacleArray;
-        }
+    const obstacleArray = [];
+    const obstacleSize = 80;
+    for (let i = 0; i < 3; i++) {
+        obstacleArray.push({
+            x: Math.random() * (canvas.width - obstacleSize),
+            y: Math.random() * (canvas.height - obstacleSize),
+            width: obstacleSize,
+            height: obstacleSize,
+            spawnTime: Date.now(),
+            soundPlayed: false 
+        });
+    }
+    return obstacleArray;
+}
+
         function checkObstacleCollision(nextX, nextY) {
-            return obstacles.some(obstacle => {
-                return !(nextX + logoSize < obstacle.x ||
-                        nextX > obstacle.x + obstacle.width ||
-                        nextY + logoSize < obstacle.y ||
-                        nextY > obstacle.y + obstacle.height);
-            });
+    const collision = obstacles.some(obstacle => {
+        const hasCollision = !(nextX + logoSize < obstacle.x ||
+                nextX > obstacle.x + obstacle.width ||
+                nextY + logoSize < obstacle.y ||
+                nextY > obstacle.y + obstacle.height);
+        
+        if (hasCollision && !obstacle.soundPlayed) {
+            obstacleSound.currentTime = 0;
+            obstacleSound.play();
+            obstacle.soundPlayed = true;
+            
+            showNotification("Bonk! Hit an obstacle!");
+            
+            document.body.style.backgroundColor = '#ff6b6b';
+            setTimeout(() => {
+                document.body.style.backgroundColor = '#11f250';
+            }, 100);
         }
+        return hasCollision;
+    });
+    return collision;
+}
+
         function drawLogo() {
             ctx.save();
             ctx.translate(logoX + logoSize / 2, logoY + logoSize / 2);
@@ -374,10 +431,18 @@
             });
         }
         function drawObstacles() {
-            obstacles.forEach(obstacle => {
-                ctx.drawImage(obstacleImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-            });
+    obstacles.forEach(obstacle => {
+        ctx.save();
+        if (obstacle.soundPlayed) {
+            const scale = 1.1;  
+            ctx.translate(obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2);
+            ctx.scale(scale, scale);
+            ctx.translate(-(obstacle.x + obstacle.width/2), -(obstacle.y + obstacle.height/2));
         }
+        ctx.drawImage(obstacleImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        ctx.restore();
+    });
+}
         function updateNfts() {
             const zombieSpeedMultiplier = 1 + (currentLevel * 0.15);
             nfts.forEach(nft => {
