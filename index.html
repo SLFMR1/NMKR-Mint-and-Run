@@ -92,7 +92,6 @@
             display: none;
             animation: level-up-animation 1s ease-in-out;
         }
-
         #controls-manual {
             position: absolute;
             bottom: 10px;
@@ -132,8 +131,7 @@
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
-    <div id="title">Mint and Run
-    </div>
+    <div id="title">Mint and Run</div>
     <div id="stats">
         Minted NFTs: <span id="minted-count">0</span><br>
         Current Level: <span id="current-level">1</span><br>
@@ -146,6 +144,7 @@
             - Rotate to eat Zombies: W/A/S/D<br>
             - Move: Arrow Keys<br>
             - Bomb Zombie Crowds: Hit Spacebar fast<br>
+            - Pause: Hit P key<br>
             <br>
             WARNING: This game may damage your brain, eyes, and mental health,<br>
             potentially cause seizures, and may trigger epilepsy!<br>
@@ -153,9 +152,9 @@
             But it is a lot of fun!<br>
             To win this game, you need to survive Level 100.<br>
             It's getting harder over time.<br>
-            Good luck!        </small>
+            Good luck!
+        </small>
     </div>
-
     <div id="health-bar">
         <div id="health-fill"></div>
     </div>
@@ -167,17 +166,14 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-
         const logo = new Image();
         const nftImage = new Image();
         const zombieImage = new Image();
         const tokenImage = new Image();
         const explosionImage = new Image();
         const obstacleImage = new Image();
-
         const mintSound = new Audio();
         const zombieAttackSound = new Audio();
         const zombieEatenSound = new Audio();
@@ -185,7 +181,6 @@
         const levelUpSound = new Audio();
         const explosionSound = new Audio();
         const speedBoostSound = new Audio();
-
         const mediaFiles = [
             {type: 'image', src: 'https://c-ipfs-gw.nmkr.io/ipfs/QmZZAnMpcuSbeYwxVqqX9R2eHiuJdWUwQgve8j1wpMz9kT', element: logo},
             {type: 'image', src: 'https://c-ipfs-gw.nmkr.io/ipfs/Qma4tci1QshQwDLohWrvtJpan12aB2VLedkuaQDhY2U2K8', element: nftImage},
@@ -201,70 +196,87 @@
             {type: 'image', src: 'https://c-ipfs-gw.nmkr.io/ipfs/QmYpi74K7VLdGNBgKpD5Pjinbg8pxKCFPd4FHYVMuRpvvt', element: obstacleImage},
             {type: 'audio', src: 'https://c-ipfs-gw.nmkr.io/ipfs/QmdbuGW4LKTujCnnAJ1mhFtvv5kf4BU14FwBQdFRNyCUX5', element: zombieEatenSound}
         ];
-
-const initialLogoSize = 200; 
-const finalLogoSize = 20;    
-const nftSize = 50;
-const baseSpeed = 5;
-const nftSpeed = 2;
-const nftBlinkTime = 5000;
-const tokenSize = 60;
-const tokenSpeedDuration = 10000;
-const killThreshold = 5;
-const killTimeout = 2000;
-const attackTimeout = 1000;
-const levelUpDisplayTime = 2000;
-const SPACE_COOLDOWN = 0;
-const obstacleDuration = 5000;
-const obstacleSpawnInterval = 15000;
-
-let logoSize = initialLogoSize;
-let logoX = canvas.width / 2 - logoSize / 2;
-let logoY = canvas.height / 2 - logoSize / 2;
-let logoRotation = 0;
-let crushing = false;
-let keysPressed = {};
-let tokenActive = false;
-let tokenActivationTime = 0;
-let mintedCount = 0;
-let zombiesKilled = 0;
-let health = 100;
-let maxHealth = 100;
-let gameStartTime = null;
-let currentTime = '00:00:00';
-let timerInterval = null;
-let nfts = generateNfts(5);
-let tokens = generateTokens(1);
-let obstacles = [];
-let obstacleSpawnTime = Date.now();
-let killingZombie = false;
-let killCount = 0;
-let lastKillPressTime = 0;
-let zombieAlert = false;
-let currentLevel = 1;
-let gameOver = false;
-let gameStarted = false;
-let spacebarPressed = false;
-let lastSpaceTime = 0;
-
-const levelThresholds = Array.from({length: 100}, (_, i) => {
-    return (i + 1) * 10; 
-});
-
-
+        const initialLogoSize = 200;
+        const finalLogoSize = 20;
+        const nftSize = 50;
+        const baseSpeed = 5;
+        const nftSpeed = 2;
+        const nftBlinkTime = 5000;
+        const tokenSize = 60;
+        const tokenSpeedDuration = 10000;
+        const killThreshold = 5;
+        const killTimeout = 2000;
+        const attackTimeout = 1000;
+        const levelUpDisplayTime = 2000;
+        const SPACE_COOLDOWN = 0;
+        const obstacleDuration = 5000;
+        const obstacleSpawnInterval = 15000;
+        let gameProgress = {
+            currentLevel: 1,
+            mintedCount: 0,
+            zombiesKilled: 0,
+            health: 100,
+        };
+        let logoSize = initialLogoSize;
+        let logoX = canvas.width / 2 - logoSize / 2;
+        let logoY = canvas.height / 2 - logoSize / 2;
+        let logoRotation = 0;
+        let crushing = false;
+        let keysPressed = {};
+        let tokenActive = false;
+        let tokenActivationTime = 0;
+        let mintedCount = 0;
+        let zombiesKilled = 0;
+        let health = 100;
+        let maxHealth = 100;
+        let gameStartTime = null;
+        let currentTime = '00:00:00';
+        let timerInterval = null;
+        let nfts = generateNfts(5);
+        let tokens = generateTokens(1);
+        let obstacles = [];
+        let obstacleSpawnTime = Date.now();
+        let killingZombie = false;
+        let killCount = 0;
+        let lastKillPressTime = 0;
+        let zombieAlert = false;
+        let currentLevel = 1;
+        let gameOver = false;
+        let gameStarted = false;
+        let spacebarPressed = false;
+        let lastSpaceTime = 0;
+        let paused = false;
+        let animationFrameId = null;
+        const levelThresholds = Array.from({length: 100}, (_, i) => {
+            return (i + 1) * 10;
+        });
         function updateTimer() {
             if (!gameStartTime || gameOver) return;
-            
             const now = Date.now();
             const diff = now - gameStartTime;
             const hours = Math.floor(diff / 3600000);
             const minutes = Math.floor((diff % 3600000) / 60000);
             const seconds = Math.floor((diff % 60000) / 1000);
-            
             currentTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             document.getElementById('timer').textContent = currentTime;
         }
-
+        function saveProgress() {
+            localStorage.setItem('mintingGameProgress', JSON.stringify(gameProgress));
+        }
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('mintingGameProgress');
+            if (savedProgress) {
+                gameProgress = JSON.parse(savedProgress);
+                currentLevel = gameProgress.currentLevel;
+                mintedCount = gameProgress.mintedCount;
+                zombiesKilled = gameProgress.zombiesKilled;
+                health = gameProgress.health;
+                document.getElementById('current-level').innerText = currentLevel;
+                document.getElementById('minted-count').innerText = `${mintedCount}/${currentLevel * 10}`;
+                document.getElementById('zombies-killed').innerText = zombiesKilled;
+                updateHealthBar();
+            }
+        }
         function preloadMedia(files) {
             return Promise.all(files.map(file => {
                 return new Promise((resolve, reject) => {
@@ -280,7 +292,6 @@ const levelThresholds = Array.from({length: 100}, (_, i) => {
                 });
             }));
         }
-
         function generateNfts(count) {
             const nftArray = [];
             for (let i = 0; i < count; i++) {
@@ -296,7 +307,6 @@ const levelThresholds = Array.from({length: 100}, (_, i) => {
             }
             return nftArray;
         }
-
         function generateTokens(count) {
             const tokenArray = [];
             for (let i = 0; i < count; i++) {
@@ -308,31 +318,28 @@ const levelThresholds = Array.from({length: 100}, (_, i) => {
             }
             return tokenArray;
         }
-
         function generateObstacles() {
-    const obstacleArray = [];
-    const obstacleSize = 80; 
-    for (let i = 0; i < 3; i++) {
-        obstacleArray.push({
-            x: Math.random() * (canvas.width - obstacleSize),
-            y: Math.random() * (canvas.height - obstacleSize),
-            width: obstacleSize,
-            height: obstacleSize,
-            spawnTime: Date.now()
-        });
-    }
-    return obstacleArray;
-}
-
-function checkObstacleCollision(nextX, nextY) {
-    return obstacles.some(obstacle => {
-        return !(nextX + logoSize < obstacle.x ||
-                nextX > obstacle.x + obstacle.width ||
-                nextY + logoSize < obstacle.y ||
-                nextY > obstacle.y + obstacle.height);
-    });
-}
-
+            const obstacleArray = [];
+            const obstacleSize = 80;
+            for (let i = 0; i < 3; i++) {
+                obstacleArray.push({
+                    x: Math.random() * (canvas.width - obstacleSize),
+                    y: Math.random() * (canvas.height - obstacleSize),
+                    width: obstacleSize,
+                    height: obstacleSize,
+                    spawnTime: Date.now()
+                });
+            }
+            return obstacleArray;
+        }
+        function checkObstacleCollision(nextX, nextY) {
+            return obstacles.some(obstacle => {
+                return !(nextX + logoSize < obstacle.x ||
+                        nextX > obstacle.x + obstacle.width ||
+                        nextY + logoSize < obstacle.y ||
+                        nextY > obstacle.y + obstacle.height);
+            });
+        }
         function drawLogo() {
             ctx.save();
             ctx.translate(logoX + logoSize / 2, logoY + logoSize / 2);
@@ -340,116 +347,99 @@ function checkObstacleCollision(nextX, nextY) {
             ctx.drawImage(logo, -logoSize / 2, -logoSize / 2, logoSize, logoSize);
             ctx.restore();
         }
-
         function drawNfts() {
-    nfts.forEach(nft => {
-        if (nft.isZombie && nft.exploded) {
-            const opacity = Math.max(0, 1 - (Date.now() - nft.explosionStart) / 2500); 
-            ctx.save();
-            ctx.globalAlpha = opacity;
-            ctx.drawImage(explosionImage, nft.x, nft.y, nftSize * 1.5, nftSize * 1.5);
-            ctx.restore();
-        } else if (nft.isZombie) {
-            ctx.drawImage(zombieImage, nft.x, nft.y, nftSize, nftSize);
-        } else {
-            if (Date.now() - nft.birthTime > nft.mutationTime - nftBlinkTime && Math.floor(Date.now() / 100) % 2 === 0) {
-                ctx.globalAlpha = 0.5;
-            }
-            ctx.drawImage(nftImage, nft.x, nft.y, nftSize, nftSize);
-            ctx.globalAlpha = 1.0;
+            nfts.forEach(nft => {
+                if (nft.isZombie && nft.exploded) {
+                    const opacity = Math.max(0, 1 - (Date.now() - nft.explosionStart) / 2500);
+                    ctx.save();
+                    ctx.globalAlpha = opacity;
+                    ctx.drawImage(explosionImage, nft.x, nft.y, nftSize * 1.5, nftSize * 1.5);
+                    ctx.restore();
+                } else if (nft.isZombie) {
+                    ctx.drawImage(zombieImage, nft.x, nft.y, nftSize, nftSize);
+                } else {
+                    if (Date.now() - nft.birthTime > nft.mutationTime - nftBlinkTime && Math.floor(Date.now() / 100) % 2 === 0) {
+                        ctx.globalAlpha = 0.5;
+                    }
+                    ctx.drawImage(nftImage, nft.x, nft.y, nftSize, nftSize);
+                    ctx.globalAlpha = 1.0;
+                }
+            });
         }
-    });
-}
-
-function drawTokens() {
+        function drawTokens() {
             tokens.forEach(token => {
                 if (!token.collected) {
                     ctx.drawImage(tokenImage, token.x, token.y, tokenSize, tokenSize);
                 }
             });
         }
-
         function drawObstacles() {
-    obstacles.forEach(obstacle => {
-        ctx.drawImage(obstacleImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-    });
-}
-
-function updateNfts() {
-    const zombieSpeedMultiplier = 1 + (currentLevel * 0.15); 
-    
-    nfts.forEach(nft => {
-        if (!nft.isZombie) {
-            nft.x += nft.dx * (tokenActive ? 1.5 : 1);
-            nft.y += nft.dy * (tokenActive ? 1.5 : 1);
-        } 
-        else {
-            const angle = Math.atan2(logoY - nft.y, logoX - nft.x);
-            const zombieBaseSpeed = nftSpeed * 0.5;
-            const adjustedSpeed = zombieBaseSpeed * zombieSpeedMultiplier;
-            
-            nft.dx = Math.cos(angle) * adjustedSpeed;
-            nft.dy = Math.sin(angle) * adjustedSpeed;
-            
-            nft.x += nft.dx * (tokenActive ? 1.5 : 1);
-            nft.y += nft.dy * (tokenActive ? 1.5 : 1);
+            obstacles.forEach(obstacle => {
+                ctx.drawImage(obstacleImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
         }
-
-        if (nft.x < 0 || nft.x > canvas.width - nftSize) nft.dx *= -1;
-        if (nft.y < 0 || nft.y > canvas.height - nftSize) nft.dy *= -1;
-
-        if (!nft.isZombie && Date.now() > nft.mutationTime) {
-            nft.isZombie = true;
-            if (!zombieAlert) {
-                killCount = 0;
-                lastKillPressTime = 0;
-                showNotification("Press SPACE 5 times within 2 seconds to kill all zombies!");
-                zombieAlert = true;
+        function updateNfts() {
+            const zombieSpeedMultiplier = 1 + (currentLevel * 0.15);
+            nfts.forEach(nft => {
+                if (!nft.isZombie) {
+                    nft.x += nft.dx * (tokenActive ? 1.5 : 1);
+                    nft.y += nft.dy * (tokenActive ? 1.5 : 1);
+                } else {
+                    const angle = Math.atan2(logoY - nft.y, logoX - nft.x);
+                    const zombieBaseSpeed = nftSpeed * 0.5;
+                    const adjustedSpeed = zombieBaseSpeed * zombieSpeedMultiplier;
+                    nft.dx = Math.cos(angle) * adjustedSpeed;
+                    nft.dy = Math.sin(angle) * adjustedSpeed;
+                    nft.x += nft.dx * (tokenActive ? 1.5 : 1);
+                    nft.y += nft.dy * (tokenActive ? 1.5 : 1);
+                }
+                if (nft.x < 0 || nft.x > canvas.width - nftSize) nft.dx *= -1;
+                if (nft.y < 0 || nft.y > canvas.height - nftSize) nft.dy *= -1;
+                if (!nft.isZombie && Date.now() > nft.mutationTime) {
+                    nft.isZombie = true;
+                    if (!zombieAlert) {
+                        killCount = 0;
+                        lastKillPressTime = 0;
+                        showNotification("Press SPACE 5 times within 2 seconds to kill all zombies!");
+                        zombieAlert = true;
+                    }
+                }
+            });
+        }
+        function checkCollision(nft) {
+            const collision = !(logoX + logoSize < nft.x ||
+                    logoX > nft.x + nftSize ||
+                    logoY + logoSize < nft.y ||
+                    logoY > nft.y + nftSize);
+            if (collision && nft.isZombie) {
+                const logoCenterX = logoX + logoSize / 2;
+                const logoCenterY = logoY + logoSize / 2;
+                const nftCenterX = nft.x + nftSize / 2;
+                const nftCenterY = nft.y + nftSize / 2;
+                let zombieAngle = Math.atan2(nftCenterY - logoCenterY, nftCenterX - logoCenterX) * 180 / Math.PI;
+                if (zombieAngle < 0) zombieAngle += 360;
+                const facingAngle = logoRotation;
+                let angleDiff = Math.abs(zombieAngle - facingAngle);
+                if (angleDiff > 180) angleDiff = 360 - angleDiff;
+                if (angleDiff <= 45) {
+                    nft.exploded = true;
+                    nft.explosionStart = Date.now();
+                    zombieEatenSound.currentTime = 0;
+                    zombieEatenSound.play();
+                    zombiesKilled++;
+                    document.getElementById('zombies-killed').innerText = zombiesKilled;
+                    showNotification("Zombie eaten!");
+                    return true;
+                }
             }
+            return collision;
         }
-    });
-}
-function checkCollision(nft) {
-    const collision = !(logoX + logoSize < nft.x ||
-            logoX > nft.x + nftSize ||
-            logoY + logoSize < nft.y ||
-            logoY > nft.y + nftSize);
-    
-    if (collision && nft.isZombie) {
-        const logoCenterX = logoX + logoSize / 2;
-        const logoCenterY = logoY + logoSize / 2;
-        const nftCenterX = nft.x + nftSize / 2;
-        const nftCenterY = nft.y + nftSize / 2;
-        
-        let zombieAngle = Math.atan2(nftCenterY - logoCenterY, nftCenterX - logoCenterX) * 180 / Math.PI;
-        if (zombieAngle < 0) zombieAngle += 360;
-        
-        const facingAngle = logoRotation;
-        
-        let angleDiff = Math.abs(zombieAngle - facingAngle);
-        if (angleDiff > 180) angleDiff = 360 - angleDiff;
-        
-        if (angleDiff <= 45) {
-            nft.exploded = true;
-            zombieEatenSound.currentTime = 0;
-            zombieEatenSound.play();
-            zombiesKilled++;
-            document.getElementById('zombies-killed').innerText = zombiesKilled;
-            showNotification("Zombie eaten!");
-            return true;
-        }
-    }
-    
-    return collision;
-}
-
-function checkCollisionToken(token) {
+        function checkCollisionToken(token) {
             return !(logoX + logoSize < token.x ||
                     logoX > token.x + tokenSize ||
                     logoY + logoSize < token.y ||
                     logoY > token.y + tokenSize);
         }
-
         function updateTokens() {
             tokens.forEach(token => {
                 if (!token.collected && checkCollisionToken(token)) {
@@ -460,7 +450,6 @@ function checkCollisionToken(token) {
                     speedBoostSound.play();
                 }
             });
-
             if (tokenActive && Date.now() - tokenActivationTime > tokenSpeedDuration) {
                 tokenActive = false;
                 showNotification("Speed Boost Ended!");
@@ -468,150 +457,125 @@ function checkCollisionToken(token) {
                 speedBoostSound.currentTime = 0;
             }
         }
-
         function updateObstacles() {
             if (Date.now() - obstacleSpawnTime > obstacleSpawnInterval) {
                 obstacles = generateObstacles();
                 obstacleSpawnTime = Date.now();
             }
-
             obstacles = obstacles.filter(obstacle => {
                 return Date.now() - obstacle.spawnTime < obstacleDuration;
             });
         }
-
-        
-        
         function update() {
-    if (gameOver || !gameStarted) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (keysPressed['w'] || keysPressed['W']) logoRotation = 270;  
-    if (keysPressed['s'] || keysPressed['S']) logoRotation = 90;   
-    if (keysPressed['a'] || keysPressed['A']) logoRotation = 180;
-    if (keysPressed['d'] || keysPressed['D']) logoRotation = 0;  
-
-    const speed = tokenActive ? baseSpeed * 2 : baseSpeed;
-    let nextX = logoX;
-    let nextY = logoY;
-
-    if (keysPressed['ArrowUp']) nextY -= speed;
-    if (keysPressed['ArrowDown']) nextY += speed;
-    if (keysPressed['ArrowLeft']) nextX -= speed;
-    if (keysPressed['ArrowRight']) nextX += speed;
-
-    nextX = Math.max(0, Math.min(canvas.width - logoSize, nextX));
-    nextY = Math.max(0, Math.min(canvas.height - logoSize, nextY));
-
-    if (!checkObstacleCollision(nextX, nextY)) {
-        logoX = nextX;
-        logoY = nextY;
-    }
-
-    if (tokenActive) {
-        document.body.style.backgroundColor = Math.floor(Date.now() / 100) % 2 === 0 ? 'white' : '#11f250';
-    } else {
-        document.body.style.backgroundColor = '#11f250';
-    }
-
-    drawLogo();
-    drawNfts();
-    drawTokens();
-    drawObstacles();
-    
-    updateNfts();
-    updateTokens();
-    updateObstacles();
-    mintNft();
-    updateGameStats();
-
-    requestAnimationFrame(update);
-}
-function mintNft() {
-    nfts = nfts.filter(nft => {
-        if (checkCollision(nft)) {
-            if (nft.isZombie && !nft.exploded) {
-                health -= 10;
-                updateHealthBar();
-                showNotification("You got attacked by a zombie!");
-                document.body.style.backgroundColor = 'red';
-                setTimeout(() => {
+            if (!gameStarted || gameOver) return;
+            if (!paused) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (keysPressed['w'] || keysPressed['W']) logoRotation = 270;
+                if (keysPressed['s'] || keysPressed['S']) logoRotation = 90;
+                if (keysPressed['a'] || keysPressed['A']) logoRotation = 180;
+                if (keysPressed['d'] || keysPressed['D']) logoRotation = 0;
+                const speed = tokenActive ? baseSpeed * 2 : baseSpeed;
+                let nextX = logoX;
+                let nextY = logoY;
+                if (keysPressed['ArrowUp']) nextY -= speed;
+                if (keysPressed['ArrowDown']) nextY += speed;
+                if (keysPressed['ArrowLeft']) nextX -= speed;
+                if (keysPressed['ArrowRight']) nextX += speed;
+                nextX = Math.max(0, Math.min(canvas.width - logoSize, nextX));
+                nextY = Math.max(0, Math.min(canvas.height - logoSize, nextY));
+                if (!checkObstacleCollision(nextX, nextY)) {
+                    logoX = nextX;
+                    logoY = nextY;
+                }
+                if (tokenActive) {
+                    document.body.style.backgroundColor = Math.floor(Date.now() / 100) % 2 === 0 ? 'white' : '#11f250';
+                } else {
                     document.body.style.backgroundColor = '#11f250';
-                }, attackTimeout);
-                zombieAttackSound.play();
-            } else if (!nft.isZombie) {
-                crushing = true;
-                setTimeout(() => crushing = false, 300);
-                mintedCount++;
-
-                const nftsNeededForNextLevel = currentLevel * 10;
-                if (mintedCount >= nftsNeededForNextLevel && currentLevel < 100) {
-                    levelUp();
-                    mintedCount = 0;
                 }
-
-                document.getElementById('minted-count').innerText = `${mintedCount}/${currentLevel * 10}`;
-                mintSound.play();
-
-                if (mintedCount % 10 === 0 || mintedCount % 15 === 0) {
-                    tokens = generateTokens(1);
-                }
-
-                if (currentLevel >= 100 && mintedCount >= 1000) {
-                    showGameComplete();
-                }
+                drawLogo();
+                drawNfts();
+                drawTokens();
+                drawObstacles();
+                updateNfts();
+                updateTokens();
+                updateObstacles();
+                mintNft();
+                updateGameStats();
             }
-            return false; 
+            animationFrameId = requestAnimationFrame(update);
         }
-
-        if (nft.isZombie && nft.exploded) {
-            if (Date.now() - nft.explosionStart < 2500) {
+        function mintNft() {
+            nfts = nfts.filter(nft => {
+                if (checkCollision(nft)) {
+                    if (nft.isZombie && !nft.exploded) {
+                        health -= 10;
+                        updateHealthBar();
+                        showNotification("You got attacked by a zombie!");
+                        document.body.style.backgroundColor = 'red';
+                        setTimeout(() => {
+                            document.body.style.backgroundColor = '#11f250';
+                        }, attackTimeout);
+                        zombieAttackSound.play();
+                    } else if (!nft.isZombie) {
+                        crushing = true;
+                        setTimeout(() => crushing = false, 300);
+                        mintedCount++;
+                        const nftsNeededForNextLevel = currentLevel * 10;
+                        if (mintedCount >= nftsNeededForNextLevel && currentLevel < 100) {
+                            levelUp();
+                            mintedCount = 0;
+                        }
+                        document.getElementById('minted-count').innerText = `${mintedCount}/${currentLevel * 10}`;
+                        mintSound.play();
+                        if (mintedCount % 10 === 0 || mintedCount % 15 === 0) {
+                            tokens = generateTokens(1);
+                        }
+                        if (currentLevel >= 100 && mintedCount >= 1000) {
+                            showGameComplete();
+                        }
+                    }
+                    return false;
+                }
+                if (nft.isZombie && nft.exploded) {
+                    if (Date.now() - nft.explosionStart < 2500) {
+                        return true;
+                    }
+                    return false;
+                }
                 return true;
+            });
+            if (nfts.length === 0) {
+                nfts = generateNfts(Math.min(5 + Math.floor(currentLevel / 10), 15));
             }
-            return false; 
         }
-
-        return true; 
-    });
-
-    if (nfts.length === 0) {
-        nfts = generateNfts(Math.min(5 + Math.floor(currentLevel / 10), 15));
-    }
-}
-function killAllZombies() {
-    let zombieCount = 0;
-    nfts.forEach(nft => {
-        if (nft.isZombie) {
-            nft.exploded = true;
-            nft.explosionStart = Date.now();
-            zombieCount++;
+        function killAllZombies() {
+            let zombieCount = 0;
+            nfts.forEach(nft => {
+                if (nft.isZombie) {
+                    nft.exploded = true;
+                    nft.explosionStart = Date.now();
+                    zombieCount++;
+                }
+            });
+            if (zombieCount > 0) {
+                explosionSound.currentTime = 0;
+                explosionSound.play();
+                showNotification("Killing all zombies!");
+                zombiesKilled += zombieCount;
+                gameProgress.zombiesKilled = zombiesKilled;
+                saveProgress();
+                const delayBeforeRemoval = 4000;
+                setTimeout(() => {
+                    const deadCount = nfts.filter(nft => nft.exploded).length;
+                    nfts = nfts.filter(nft => !nft.exploded);
+                    nfts = nfts.concat(generateNfts(deadCount));
+                    document.getElementById('zombies-killed').innerText = zombiesKilled;
+                    zombieAlert = false;
+                    showNotification("All zombies eliminated! Ready for next sequence.");
+                }, delayBeforeRemoval);
+            }
         }
-    });
-
-    if (zombieCount > 0) {
-        explosionSound.currentTime = 0;
-        explosionSound.play();
-        showNotification("Killing all zombies!");
-
-        killCount = 0;
-        lastKillPressTime = 0;
-
-        const delayBeforeRemoval = 4000;
-
-        setTimeout(() => {
-            const deadCount = nfts.filter(nft => nft.exploded).length;
-            nfts = nfts.filter(nft => !nft.exploded);
-            nfts = nfts.concat(generateNfts(deadCount));
-            zombiesKilled += deadCount;
-            document.getElementById('zombies-killed').innerText = zombiesKilled;
-            zombieAlert = false;
-            showNotification("All zombies eliminated! Ready for next sequence.");
-        }, delayBeforeRemoval);
-    }
-}
-
-function updateHealthBar() {
+        function updateHealthBar() {
             const healthFill = document.getElementById('health-fill');
             const healthPercentage = (health / maxHealth) * 100;
             healthFill.style.width = healthPercentage + '%';
@@ -619,7 +583,6 @@ function updateHealthBar() {
                 endGame();
             }
         }
-
         function showNotification(message) {
             const notification = document.getElementById('notification');
             notification.innerText = message;
@@ -628,7 +591,6 @@ function updateHealthBar() {
                 notification.style.display = 'none';
             }, 3000);
         }
-
         function endGame() {
             gameOver = true;
             clearInterval(timerInterval);
@@ -636,7 +598,6 @@ function updateHealthBar() {
             document.getElementById('restart-button').style.display = 'block';
             gameOverSound.play();
         }
-
         function showGameComplete() {
             gameOver = true;
             clearInterval(timerInterval);
@@ -646,30 +607,28 @@ function updateHealthBar() {
             document.getElementById('restart-button').style.display = 'block';
             levelUpSound.play();
         }
-
         function levelUp() {
-    if (currentLevel < 100) {
-        currentLevel++;
-        
-        logoSize = initialLogoSize - ((initialLogoSize - finalLogoSize) * (currentLevel - 1) / 99);
-        
-        document.getElementById('current-level').innerText = currentLevel;
-        document.getElementById('level-up').innerText = `Level ${currentLevel}`;
-        document.getElementById('level-up').style.display = 'block';
-        
-        maxHealth += 10;
-        health = maxHealth;
-        updateHealthBar();
-
-        setTimeout(() => {
-            document.getElementById('level-up').style.display = 'none';
-            resetForNextLevel();
-        }, levelUpDisplayTime);
-        
-        levelUpSound.play();
-    }
-}
-
+            if (currentLevel < 100) {
+                currentLevel++;
+                gameProgress.currentLevel = currentLevel;
+                gameProgress.health = health;
+                mintedCount = 0;
+                gameProgress.mintedCount = mintedCount;
+                saveProgress();
+                logoSize = initialLogoSize - ((initialLogoSize - finalLogoSize) * (currentLevel - 1) / 99);
+                document.getElementById('current-level').innerText = currentLevel;
+                document.getElementById('level-up').innerText = `Level ${currentLevel}`;
+                document.getElementById('level-up').style.display = 'block';
+                maxHealth += 10;
+                health = maxHealth;
+                updateHealthBar();
+                setTimeout(() => {
+                    document.getElementById('level-up').style.display = 'none';
+                    resetForNextLevel();
+                }, levelUpDisplayTime);
+                levelUpSound.play();
+            }
+        }
         function resetForNextLevel() {
             nfts = generateNfts(Math.min(5 + Math.floor(currentLevel / 10), 15));
             tokens = generateTokens(1);
@@ -680,76 +639,86 @@ function updateHealthBar() {
             zombieAlert = false;
             obstacleSpawnTime = Date.now();
         }
-
         function updateGameStats() {
-    const progress = document.getElementById('minted-count');
-    const nftsNeeded = currentLevel * 10;
-    progress.innerText = `${mintedCount}/${nftsNeeded}`;
-}
-function startGame() {
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('controls-manual').style.display = 'none';
-    document.getElementById('title').style.display = 'none';
-    gameStarted = true;
-    gameStartTime = Date.now();
-    timerInterval = setInterval(updateTimer, 1000);
-    health = 100;
-    updateHealthBar();
-    update();
-}
-
+            const progress = document.getElementById('minted-count');
+            const nftsNeeded = currentLevel * 10;
+            progress.innerText = `${mintedCount}/${nftsNeeded}`;
+        }
+        function startGame() {
+            loadProgress();
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('controls-manual').style.display = 'none';
+            document.getElementById('title').style.display = 'none';
+            gameStarted = true;
+            gameStartTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+            nfts = generateNfts(Math.min(5 + Math.floor(currentLevel / 10), 15));
+            tokens = generateTokens(1);
+            obstacles = generateObstacles();
+            updateHealthBar();
+            updateGameStats();
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            update();
+        }
+        function togglePause() {
+            paused = !paused;
+            if (paused) {
+                clearInterval(timerInterval);
+            } else {
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+            showNotification(paused ? "Game Paused" : "Game Resumed");
+        }
         window.addEventListener('keydown', (e) => {
-    if (gameOver || !gameStarted) return;
-    
-    keysPressed[e.key] = true;
-    
-    if (e.key === ' ' || e.code === 'Space') {
-        e.preventDefault();
-        
-        const now = Date.now();
-        if (now - lastSpaceTime >= SPACE_COOLDOWN) {
-            lastSpaceTime = now;
-            
-            if (zombieAlert) {
-                if (now - lastKillPressTime > killTimeout) {
-                    killCount = 0;
-                }
-                
-                killCount++;
-                lastKillPressTime = now;
-                
-                if (killCount >= killThreshold) {
-                    killAllZombies();
-                } else {
-                    showNotification(`${killThreshold - killCount} more hits needed!`);
+            if (gameOver || !gameStarted) return;
+            keysPressed[e.key] = true;
+            if (e.key.toLowerCase() === 'p') {
+                togglePause();
+                return;
+            }
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+                const now = Date.now();
+                if (now - lastSpaceTime >= SPACE_COOLDOWN) {
+                    lastSpaceTime = now;
+                    if (zombieAlert) {
+                        if (now - lastKillPressTime > killTimeout) {
+                            killCount = 0;
+                        }
+                        killCount++;
+                        lastKillPressTime = now;
+                        if (killCount >= killThreshold) {
+                            killAllZombies();
+                        } else {
+                            showNotification(`${killThreshold - killCount} more hits needed!`);
+                        }
+                    }
                 }
             }
-        }
-    }
-});
-
-window.addEventListener('keyup', (e) => {
-    if (e.key === ' ' || e.code === 'Space') {
-        spacebarPressed = false;
-    }
-    delete keysPressed[e.key];
-});
-
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.key === ' ' || e.code === 'Space') {
+                spacebarPressed = false;
+            }
+            delete keysPressed[e.key];
+        });
         window.addEventListener('keydown', function(e) {
             if(e.key === ' ' && e.target === document.body) {
                 e.preventDefault();
             }
         });
-
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             logoX = Math.min(Math.max(0, logoX), canvas.width - logoSize);
             logoY = Math.min(Math.max(0, logoY), canvas.height - logoSize);
         });
-
         document.getElementById('start-screen').onclick = startGame;
-
+        document.getElementById('restart-button').onclick = function() {
+            location.reload();
+        };
         preloadMedia(mediaFiles).then(() => {
             document.getElementById('start-screen').style.display = 'block';
         }).catch(error => {
@@ -758,3 +727,5 @@ window.addEventListener('keyup', (e) => {
     </script>
 </body>
 </html>
+                    
+
